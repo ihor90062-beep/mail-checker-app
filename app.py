@@ -54,39 +54,123 @@ def get_provider_config(email):
     domain = email.split('@')[1].lower()
     return EMAIL_PROVIDERS.get(domain, {})
 
-def simulate_email_check(email, password, protocol):
-    """Simulate email account checking with realistic delays"""
-    time.sleep(2)  # Simulate network delay
-    
-    # Mock validation logic
+def check_email_account(email, password, protocol):
+    """Real email account checking with actual server connections"""
     if '@' not in email:
         return {'status': 'invalid', 'message': 'Invalid email format'}
     
     domain = email.split('@')[1].lower()
-    if domain not in EMAIL_PROVIDERS:
+    config = EMAIL_PROVIDERS.get(domain)
+    
+    if not config:
         return {'status': 'unsupported', 'message': f'Provider {domain} not supported'}
     
-    # Simulate success/failure based on simple rules
-    if len(password) < 6:
-        return {'status': 'failed', 'message': 'Authentication failed - password too short'}
+    protocol_config = config.get(protocol)
+    if not protocol_config:
+        return {'status': 'invalid', 'message': f'{protocol.upper()} not supported for {domain}'}
     
-    # Simulate random failures for demonstration
-    import random
-    if random.random() < 0.2:  # 20% failure rate
-        return {'status': 'failed', 'message': 'Connection timeout or authentication failed'}
-    
-    return {
-        'status': 'success',
-        'message': f'{protocol.upper()} connection successful',
-        'provider': domain,
-        'protocol': protocol
-    }
+    try:
+        if protocol == 'smtp':
+            return check_smtp_connection(email, password, protocol_config)
+        elif protocol == 'imap':
+            return check_imap_connection(email, password, protocol_config)
+        elif protocol == 'pop3':
+            return check_pop3_connection(email, password, protocol_config)
+        else:
+            return {'status': 'invalid', 'message': f'Unknown protocol: {protocol}'}
+            
+    except Exception as e:
+        logger.error(f"Email check error for {email}: {str(e)}")
+        return {'status': 'error', 'message': f'Connection error: {str(e)}'}
 
-def simulate_proxy_check(proxy_host, proxy_port, proxy_type):
-    """Simulate proxy checking with realistic delays"""
-    time.sleep(1.5)  # Simulate network delay
-    
-    # Mock validation logic
+def check_smtp_connection(email, password, config):
+    """Check SMTP connection"""
+    try:
+        if config['ssl']:
+            server = smtplib.SMTP_SSL(config['host'], config['port'], timeout=10)
+        else:
+            server = smtplib.SMTP(config['host'], config['port'], timeout=10)
+            if config['port'] == 587:  # TLS
+                server.starttls()
+        
+        server.login(email, password)
+        server.quit()
+        
+        return {
+            'status': 'success',
+            'message': 'SMTP authentication successful',
+            'provider': email.split('@')[1],
+            'protocol': 'smtp',
+            'server': f"{config['host']}:{config['port']}"
+        }
+        
+    except smtplib.SMTPAuthenticationError:
+        return {'status': 'failed', 'message': 'Authentication failed - invalid credentials'}
+    except smtplib.SMTPConnectError:
+        return {'status': 'failed', 'message': 'Connection failed - server unreachable'}
+    except smtplib.SMTPServerDisconnected:
+        return {'status': 'failed', 'message': 'Server disconnected unexpectedly'}
+    except Exception as e:
+        return {'status': 'error', 'message': f'SMTP error: {str(e)}'}
+
+def check_imap_connection(email, password, config):
+    """Check IMAP connection"""
+    try:
+        if config['ssl']:
+            server = imaplib.IMAP4_SSL(config['host'], config['port'])
+        else:
+            server = imaplib.IMAP4(config['host'], config['port'])
+        
+        server.login(email, password)
+        server.select('INBOX')
+        server.close()
+        server.logout()
+        
+        return {
+            'status': 'success',
+            'message': 'IMAP authentication successful',
+            'provider': email.split('@')[1],
+            'protocol': 'imap',
+            'server': f"{config['host']}:{config['port']}"
+        }
+        
+    except imaplib.IMAP4.error as e:
+        if 'authentication failed' in str(e).lower():
+            return {'status': 'failed', 'message': 'Authentication failed - invalid credentials'}
+        return {'status': 'failed', 'message': f'IMAP error: {str(e)}'}
+    except Exception as e:
+        return {'status': 'error', 'message': f'IMAP connection error: {str(e)}'}
+
+def check_pop3_connection(email, password, config):
+    """Check POP3 connection"""
+    try:
+        if config['ssl']:
+            server = poplib.POP3_SSL(config['host'], config['port'], timeout=10)
+        else:
+            server = poplib.POP3(config['host'], config['port'], timeout=10)
+        
+        server.user(email)
+        server.pass_(password)
+        server.stat()  # Test connection
+        server.quit()
+        
+        return {
+            'status': 'success',
+            'message': 'POP3 authentication successful',
+            'provider': email.split('@')[1],
+            'protocol': 'pop3',
+            'server': f"{config['host']}:{config['port']}"
+        }
+        
+    except poplib.error_proto as e:
+        if 'authentication failed' in str(e).lower() or 'invalid' in str(e).lower():
+            return {'status': 'failed', 'message': 'Authentication failed - invalid credentials'}
+        return {'status': 'failed', 'message': f'POP3 error: {str(e)}'}
+    except Exception as e:
+        return {'status': 'error', 'message': f'POP3 connection error: {str(e)}'}
+
+def check_proxy_server(proxy_host, proxy_port, proxy_type, username=None, password=None):
+    """Real proxy server checking with actual connections"""
     try:
         port = int(proxy_port)
         if port < 1 or port > 65535:
@@ -94,18 +178,138 @@ def simulate_proxy_check(proxy_host, proxy_port, proxy_type):
     except ValueError:
         return {'status': 'invalid', 'message': 'Port must be a number'}
     
-    # Simulate random results for demonstration
-    import random
-    if random.random() < 0.3:  # 30% failure rate
-        return {'status': 'failed', 'message': 'Proxy connection failed or timeout'}
+    try:
+        if proxy_type.lower() in ['http', 'https']:
+            return check_http_proxy(proxy_host, port, proxy_type, username, password)
+        elif proxy_type.lower() in ['socks4', 'socks5']:
+            return check_socks_proxy(proxy_host, port, proxy_type, username, password)
+        else:
+            return {'status': 'invalid', 'message': f'Unsupported proxy type: {proxy_type}'}
+            
+    except Exception as e:
+        logger.error(f"Proxy check error for {proxy_host}:{port}: {str(e)}")
+        return {'status': 'error', 'message': f'Connection error: {str(e)}'}
+
+def check_http_proxy(host, port, proxy_type, username=None, password=None):
+    """Check HTTP/HTTPS proxy"""
+    import requests
     
-    response_time = round(random.uniform(100, 2000), 2)
-    return {
-        'status': 'success',
-        'message': f'{proxy_type.upper()} proxy is working',
-        'response_time': f'{response_time}ms',
-        'type': proxy_type
-    }
+    try:
+        # Build proxy URL
+        if username and password:
+            proxy_url = f"http://{username}:{password}@{host}:{port}"
+        else:
+            proxy_url = f"http://{host}:{port}"
+        
+        proxies = {
+            'http': proxy_url,
+            'https': proxy_url
+        }
+        
+        # Test proxy with a request to httpbin.org
+        test_url = 'http://httpbin.org/ip' if proxy_type.lower() == 'http' else 'https://httpbin.org/ip'
+        
+        start_time = time.time()
+        response = requests.get(test_url, proxies=proxies, timeout=10)
+        response_time = round((time.time() - start_time) * 1000, 2)
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                proxy_ip = data.get('origin', 'Unknown')
+                
+                return {
+                    'status': 'success',
+                    'message': f'{proxy_type.upper()} proxy is working',
+                    'response_time': f'{response_time}ms',
+                    'type': proxy_type,
+                    'proxy_ip': proxy_ip,
+                    'server': f"{host}:{port}"
+                }
+            except:
+                return {
+                    'status': 'success',
+                    'message': f'{proxy_type.upper()} proxy is working',
+                    'response_time': f'{response_time}ms',
+                    'type': proxy_type,
+                    'server': f"{host}:{port}"
+                }
+        else:
+            return {'status': 'failed', 'message': f'Proxy returned status code: {response.status_code}'}
+            
+    except requests.exceptions.ProxyError:
+        return {'status': 'failed', 'message': 'Proxy connection failed - authentication or connectivity issue'}
+    except requests.exceptions.ConnectTimeout:
+        return {'status': 'failed', 'message': 'Connection timeout - proxy server unreachable'}
+    except requests.exceptions.ReadTimeout:
+        return {'status': 'failed', 'message': 'Read timeout - proxy server too slow'}
+    except Exception as e:
+        return {'status': 'error', 'message': f'HTTP proxy error: {str(e)}'}
+
+def check_socks_proxy(host, port, proxy_type, username=None, password=None):
+    """Check SOCKS4/SOCKS5 proxy"""
+    try:
+        # Test basic TCP connection to proxy
+        start_time = time.time()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(10)
+        
+        result = sock.connect_ex((host, port))
+        response_time = round((time.time() - start_time) * 1000, 2)
+        
+        if result == 0:
+            sock.close()
+            
+            # For SOCKS5, try to test with requests library if available
+            if proxy_type.lower() == 'socks5':
+                try:
+                    import requests
+                    
+                    if username and password:
+                        proxy_url = f"socks5://{username}:{password}@{host}:{port}"
+                    else:
+                        proxy_url = f"socks5://{host}:{port}"
+                    
+                    proxies = {
+                        'http': proxy_url,
+                        'https': proxy_url
+                    }
+                    
+                    test_response = requests.get('http://httpbin.org/ip', proxies=proxies, timeout=10)
+                    if test_response.status_code == 200:
+                        try:
+                            data = test_response.json()
+                            proxy_ip = data.get('origin', 'Unknown')
+                            return {
+                                'status': 'success',
+                                'message': f'{proxy_type.upper()} proxy is working',
+                                'response_time': f'{response_time}ms',
+                                'type': proxy_type,
+                                'proxy_ip': proxy_ip,
+                                'server': f"{host}:{port}"
+                            }
+                        except:
+                            pass
+                except:
+                    pass
+            
+            return {
+                'status': 'success',
+                'message': f'{proxy_type.upper()} proxy connection successful',
+                'response_time': f'{response_time}ms',
+                'type': proxy_type,
+                'server': f"{host}:{port}"
+            }
+        else:
+            sock.close()
+            return {'status': 'failed', 'message': f'Connection failed to {host}:{port}'}
+            
+    except socket.timeout:
+        return {'status': 'failed', 'message': 'Connection timeout'}
+    except socket.gaierror:
+        return {'status': 'failed', 'message': 'DNS resolution failed'}
+    except Exception as e:
+        return {'status': 'error', 'message': f'SOCKS proxy error: {str(e)}'}
 
 def run_batch_check(job_id, items, check_type):
     """Run batch checking in background thread"""
@@ -121,14 +325,16 @@ def run_batch_check(job_id, items, check_type):
     
     for i, item in enumerate(items):
         try:
+            result = None
             if check_type == 'email':
-                result = simulate_email_check(item['email'], item['password'], item.get('protocol', 'smtp'))
+                result = check_email_account(item['email'], item['password'], item.get('protocol', 'smtp'))
                 result['email'] = item['email']
             elif check_type == 'proxy':
-                result = simulate_proxy_check(item['host'], item['port'], item.get('type', 'http'))
+                result = check_proxy_server(item['host'], item['port'], item.get('type', 'http'), item.get('username'), item.get('password'))
                 result['proxy'] = f"{item['host']}:{item['port']}"
             
-            batch_jobs[job_id]['results'].append(result)
+            if result:
+                batch_jobs[job_id]['results'].append(result)
             batch_jobs[job_id]['progress'] = i + 1
             
             logger.debug(f"Batch job {job_id}: completed {i + 1}/{len(items)}")
@@ -224,8 +430,8 @@ def dashboard():
     }
     
     if user_results:
-        successful = sum(1 for r in user_results if r.get('status') == 'success')
-        stats['success_rate'] = round((successful / len(user_results)) * 100, 1)
+        successful = sum(1 for r in user_results if r.get('result', {}).get('status') == 'success')
+        stats['success_rate'] = round((successful / len(user_results)) * 100.0, 1)
     
     return render_template('dashboard.html', stats=stats)
 
@@ -261,7 +467,7 @@ def api_check_email():
         return jsonify({'error': 'Email and password required'}), 400
     
     # Run check in background thread for realistic async behavior
-    result = simulate_email_check(email, password, protocol)
+    result = check_email_account(email, password, protocol)
     
     # Store result
     result_id = len(check_results) + 1
@@ -290,7 +496,7 @@ def api_check_proxy():
     if not host or not port:
         return jsonify({'error': 'Host and port required'}), 400
     
-    result = simulate_proxy_check(host, port, proxy_type)
+    result = check_proxy_server(host, port, proxy_type, data.get('username'), data.get('password'))
     
     # Store result
     result_id = len(check_results) + 1
