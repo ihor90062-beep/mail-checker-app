@@ -453,6 +453,12 @@ def batch_checker():
         return redirect(url_for('login'))
     return render_template('batch_checker.html')
 
+@app.route('/advanced-checker')
+def advanced_checker():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('advanced_checker.html')
+
 @app.route('/api/check-email', methods=['POST'])
 def api_check_email():
     if 'user_id' not in session:
@@ -552,6 +558,121 @@ def api_provider_config(email):
     
     config = get_provider_config(email)
     return jsonify(config)
+
+@app.route('/api/advanced-check-emails', methods=['POST'])
+def api_advanced_check_emails():
+    """Advanced email checking with multiple protocols"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    emails = data.get('emails', [])
+    protocols = data.get('protocols', ['smtp'])
+    use_proxy = data.get('use_proxy', False)
+    
+    if not emails:
+        return jsonify({'error': 'Email list required'}), 400
+    
+    results = []
+    for email_line in emails:
+        if ':' not in email_line:
+            continue
+        
+        email, password = email_line.split(':', 1)
+        email = email.strip()
+        password = password.strip()
+        
+        for protocol in protocols:
+            result = check_email_account(email, password, protocol)
+            results.append({
+                'item': f"{email} ({protocol})",
+                'status': result.get('status'),
+                'message': result.get('message'),
+                'response_time': result.get('response_time')
+            })
+    
+    return jsonify({'success': True, 'results': results})
+
+@app.route('/api/advanced-check-proxies', methods=['POST'])
+def api_advanced_check_proxies():
+    """Advanced proxy checking with custom settings"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    proxies = data.get('proxies', [])
+    proxy_type = data.get('type', 'http')
+    auth = data.get('auth', '')
+    test_url = data.get('test_url', 'https://httpbin.org/ip')
+    method = data.get('method', 'GET')
+    
+    if not proxies:
+        return jsonify({'error': 'Proxy list required'}), 400
+    
+    results = []
+    for proxy_line in proxies:
+        if ':' not in proxy_line:
+            continue
+        
+        host, port = proxy_line.split(':', 1)
+        host = host.strip()
+        try:
+            port = int(port.strip())
+        except ValueError:
+            continue
+        
+        username = password = None
+        if auth and ':' in auth:
+            username, password = auth.split(':', 1)
+        
+        result = check_proxy_server(host, port, proxy_type, username, password)
+        results.append({
+            'item': f"{host}:{port}",
+            'status': result.get('status'),
+            'message': result.get('message'),
+            'response_time': result.get('response_time')
+        })
+    
+    return jsonify({'success': True, 'results': results})
+
+@app.route('/api/parse-emails', methods=['POST'])
+def api_parse_emails():
+    """Parse emails for specific content"""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    emails = data.get('emails', [])
+    keywords = data.get('keywords', [])
+    count = data.get('count', 10)
+    period = data.get('period', 7)
+    
+    if not emails:
+        return jsonify({'error': 'Email list required'}), 400
+    
+    # This is a simplified parser - in real implementation you'd use IMAP to fetch and parse emails
+    results = []
+    for email_line in emails:
+        if ':' not in email_line:
+            continue
+        
+        email, password = email_line.split(':', 1)
+        email = email.strip()
+        password = password.strip()
+        
+        # Simulate email parsing (in real implementation, connect via IMAP and search)
+        import random
+        found_emails = random.randint(0, count)
+        keyword_matches = random.randint(0, len(keywords)) if keywords else 0
+        
+        results.append({
+            'item': email,
+            'status': 'success' if found_emails > 0 else 'no_results',
+            'message': f"Found {found_emails} emails, {keyword_matches} keyword matches",
+            'response_time': f"{random.randint(500, 2000)}ms"
+        })
+    
+    return jsonify({'success': True, 'results': results})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

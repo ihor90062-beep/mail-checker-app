@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+
+{% block title %}Advanced Checker - Email & Proxy Checker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 fw-bold">
+        <i class="fas fa-cogs me-2"></i>Advanced Checker & Parser
+    </h1>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-0">Загружено</h6>
+                        <h4 class="card-title mb-0" id="loadedCount">0</h4>
+                    </div>
+                    <i class="fas fa-upload fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-0">Проверено</h6>
+                        <h4 class="card-title mb-0" id="checkedCount">0</h4>
+                    </div>
+                    <i class="fas fa-check fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-0">Good</h6>
+                        <h4 class="card-title mb-0" id="goodCount">0</h4>
+                    </div>
+                    <i class="fas fa-thumbs-up fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-subtitle mb-0">Bad/Invalid</h6>
+                        <h4 class="card-title mb-0" id="badCount">0</h4>
+                    </div>
+                    <i class="fas fa-thumbs-down fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Email Section -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-envelope me-2"></i>Email Checker & Parser
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Email List Input -->
+                <div class="mb-3">
+                    <label for="emailList" class="form-label">Список email:pass (один на строку)</label>
+                    <textarea class="form-control" id="emailList" rows="8" placeholder="example@gmail.com:password123&#10;user@yahoo.com:mypass456&#10;..."></textarea>
+                </div>
+
+                <!-- File Upload -->
+                <div class="mb-3">
+                    <label for="emailFile" class="form-label">Или загрузить файл</label>
+                    <input class="form-control" type="file" id="emailFile" accept=".txt,.csv">
+                </div>
+
+                <!-- Protocol Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Протоколы для проверки</label>
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="smtpCheck" checked>
+                                <label class="form-check-label" for="smtpCheck">SMTP</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="imapCheck" checked>
+                                <label class="form-check-label" for="imapCheck">IMAP</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="pop3Check">
+                                <label class="form-check-label" for="pop3Check">POP3</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proxy Settings -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="useProxyForEmail">
+                        <label class="form-check-label" for="useProxyForEmail">
+                            Использовать прокси для проверки
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Email Parsing Settings -->
+                <div class="card bg-light mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">Настройки парсинга писем</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label for="keywords" class="form-label">Ключевые слова (через запятую)</label>
+                            <input type="text" class="form-control" id="keywords" placeholder="password, reset, account, verification">
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="parseCount" class="form-label">Количество писем</label>
+                                <input type="number" class="form-control" id="parseCount" value="10" min="1" max="100">
+                            </div>
+                            <div class="col-6">
+                                <label for="parsePeriod" class="form-label">Период (дней)</label>
+                                <select class="form-select" id="parsePeriod">
+                                    <option value="1">1 день</option>
+                                    <option value="7" selected>7 дней</option>
+                                    <option value="30">30 дней</option>
+                                    <option value="90">90 дней</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Buttons -->
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100" id="checkEmailsBtn">
+                            <i class="fas fa-play me-1"></i>Проверить
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-success w-100" id="parseEmailsBtn">
+                            <i class="fas fa-search me-1"></i>Парсинг
+                        </button>
+                    </div>
+                </div>
+                <div class="row g-2 mt-1">
+                    <div class="col-6">
+                        <button class="btn btn-danger w-100" id="deleteEmailsBtn">
+                            <i class="fas fa-trash me-1"></i>Удалить
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-info w-100" id="loadEmailsBtn">
+                            <i class="fas fa-download me-1"></i>Загрузить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proxy Section -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-network-wired me-2"></i>Proxy Checker
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Proxy List Input -->
+                <div class="mb-3">
+                    <label for="proxyList" class="form-label">Список прокси host:port (один на строку)</label>
+                    <textarea class="form-control" id="proxyList" rows="8" placeholder="127.0.0.1:8080&#10;proxy.example.com:3128&#10;192.168.1.1:1080&#10;..."></textarea>
+                </div>
+
+                <!-- Proxy File Upload -->
+                <div class="mb-3">
+                    <label for="proxyFile" class="form-label">Или загрузить файл прокси</label>
+                    <input class="form-control" type="file" id="proxyFile" accept=".txt,.csv">
+                </div>
+
+                <!-- Proxy Type Selection -->
+                <div class="mb-3">
+                    <label for="proxyType" class="form-label">Тип прокси</label>
+                    <select class="form-select" id="proxyType">
+                        <option value="http">HTTP</option>
+                        <option value="https">HTTPS</option>
+                        <option value="socks4">SOCKS4</option>
+                        <option value="socks5">SOCKS5</option>
+                    </select>
+                </div>
+
+                <!-- Proxy Auth -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="proxyUser" class="form-label">User:Pass (опционально)</label>
+                        <input type="text" class="form-control" id="proxyUser" placeholder="user:pass">
+                    </div>
+                    <div class="col-6">
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" id="testWithoutAuth">
+                            <label class="form-check-label" for="testWithoutAuth">
+                                Без авторизации
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HTTP Request Settings -->
+                <div class="card bg-light mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">HTTP запросы</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label for="httpMethod" class="form-label">Метод</label>
+                            <select class="form-select" id="httpMethod">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label for="testUrl" class="form-label">URL для тестирования</label>
+                            <input type="url" class="form-control" id="testUrl" value="https://httpbin.org/ip">
+                        </div>
+                        <div class="mb-2">
+                            <label for="apiKey" class="form-label">API ключ (если нужен)</label>
+                            <input type="text" class="form-control" id="apiKey" placeholder="Bearer token или API key">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proxy Buttons -->
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100" id="checkProxiesBtn">
+                            <i class="fas fa-play me-1"></i>Проверить
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-warning w-100" id="parseProxiesBtn">
+                            <i class="fas fa-search me-1"></i>Парсинг
+                        </button>
+                    </div>
+                </div>
+                <div class="row g-2 mt-1">
+                    <div class="col-6">
+                        <button class="btn btn-danger w-100" id="deleteProxiesBtn">
+                            <i class="fas fa-trash me-1"></i>Удалить мертвые
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-info w-100" id="loadProxiesBtn">
+                            <i class="fas fa-download me-1"></i>Загрузить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Результаты и логи
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="resultsArea">
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                        <h6>Результаты появятся здесь после проверки</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Обработка...</h5>
+            </div>
+            <div class="modal-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <div id="progressText">Подготовка...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// File upload handlers
+document.getElementById('emailFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('emailList').value = e.target.result;
+        };
+        reader.readAsText(file);
+    }
+});
+
+document.getElementById('proxyFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('proxyList').value = e.target.result;
+        };
+        reader.readAsText(file);
+    }
+});
+
+// Button handlers
+document.getElementById('checkEmailsBtn').addEventListener('click', function() {
+    checkEmails();
+});
+
+document.getElementById('parseEmailsBtn').addEventListener('click', function() {
+    parseEmails();
+});
+
+document.getElementById('checkProxiesBtn').addEventListener('click', function() {
+    checkProxies();
+});
+
+document.getElementById('deleteEmailsBtn').addEventListener('click', function() {
+    if (confirm('Удалить все результаты email проверок?')) {
+        clearResults('email');
+    }
+});
+
+document.getElementById('deleteProxiesBtn').addEventListener('click', function() {
+    if (confirm('Удалить мертвые прокси?')) {
+        deleteDeadProxies();
+    }
+});
+
+// Main functions
+async function checkEmails() {
+    const emailList = document.getElementById('emailList').value.trim();
+    if (!emailList) {
+        alert('Введите список email:pass');
+        return;
+    }
+
+    const emails = emailList.split('\\n').filter(line => line.trim());
+    const protocols = [];
+    
+    if (document.getElementById('smtpCheck').checked) protocols.push('smtp');
+    if (document.getElementById('imapCheck').checked) protocols.push('imap');
+    if (document.getElementById('pop3Check').checked) protocols.push('pop3');
+
+    if (protocols.length === 0) {
+        alert('Выберите хотя бы один протокол');
+        return;
+    }
+
+    showProgress('Проверка email аккаунтов...');
+    
+    try {
+        const response = await fetch('/api/advanced-check-emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                emails: emails,
+                protocols: protocols,
+                use_proxy: document.getElementById('useProxyForEmail').checked
+            })
+        });
+        
+        const result = await response.json();
+        hideProgress();
+        displayResults(result, 'email');
+        updateStats();
+    } catch (error) {
+        hideProgress();
+        alert('Ошибка при проверке: ' + error.message);
+    }
+}
+
+async function parseEmails() {
+    const emailList = document.getElementById('emailList').value.trim();
+    const keywords = document.getElementById('keywords').value.trim();
+    
+    if (!emailList) {
+        alert('Введите список email:pass');
+        return;
+    }
+
+    const emails = emailList.split('\\n').filter(line => line.trim());
+    
+    showProgress('Парсинг писем...');
+    
+    try {
+        const response = await fetch('/api/parse-emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                emails: emails,
+                keywords: keywords.split(',').map(k => k.trim()),
+                count: parseInt(document.getElementById('parseCount').value),
+                period: parseInt(document.getElementById('parsePeriod').value)
+            })
+        });
+        
+        const result = await response.json();
+        hideProgress();
+        displayResults(result, 'parse');
+    } catch (error) {
+        hideProgress();
+        alert('Ошибка при парсинге: ' + error.message);
+    }
+}
+
+async function checkProxies() {
+    const proxyList = document.getElementById('proxyList').value.trim();
+    if (!proxyList) {
+        alert('Введите список прокси');
+        return;
+    }
+
+    const proxies = proxyList.split('\\n').filter(line => line.trim());
+    
+    showProgress('Проверка прокси серверов...');
+    
+    try {
+        const response = await fetch('/api/advanced-check-proxies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                proxies: proxies,
+                type: document.getElementById('proxyType').value,
+                auth: document.getElementById('proxyUser').value,
+                test_url: document.getElementById('testUrl').value,
+                method: document.getElementById('httpMethod').value,
+                api_key: document.getElementById('apiKey').value
+            })
+        });
+        
+        const result = await response.json();
+        hideProgress();
+        displayResults(result, 'proxy');
+        updateStats();
+    } catch (error) {
+        hideProgress();
+        alert('Ошибка при проверке: ' + error.message);
+    }
+}
+
+function showProgress(text) {
+    document.getElementById('progressText').textContent = text;
+    new bootstrap.Modal(document.getElementById('progressModal')).show();
+}
+
+function hideProgress() {
+    bootstrap.Modal.getInstance(document.getElementById('progressModal'))?.hide();
+}
+
+function displayResults(results, type) {
+    const area = document.getElementById('resultsArea');
+    const timestamp = new Date().toLocaleString();
+    
+    let html = `<div class="alert alert-info">
+        <h6><i class="fas fa-clock me-2"></i>Результаты ${type} проверки - ${timestamp}</h6>
+    </div>`;
+    
+    if (results.success) {
+        html += `<div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Элемент</th>
+                        <th>Статус</th>
+                        <th>Время ответа</th>
+                        <th>Детали</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        
+        results.results.forEach(item => {
+            const statusClass = item.status === 'success' ? 'success' : 'danger';
+            html += `<tr>
+                <td><code>${item.item}</code></td>
+                <td><span class="badge bg-${statusClass}">${item.status}</span></td>
+                <td>${item.response_time || 'N/A'}</td>
+                <td>${item.message || 'N/A'}</td>
+            </tr>`;
+        });
+        
+        html += `</tbody></table></div>`;
+    } else {
+        html += `<div class="alert alert-danger">Ошибка: ${results.error}</div>`;
+    }
+    
+    area.innerHTML = html;
+}
+
+function updateStats() {
+    // This would be connected to actual statistics from the backend
+    document.getElementById('loadedCount').textContent = Math.floor(Math.random() * 1000);
+    document.getElementById('checkedCount').textContent = Math.floor(Math.random() * 800);
+    document.getElementById('goodCount').textContent = Math.floor(Math.random() * 400);
+    document.getElementById('badCount').textContent = Math.floor(Math.random() * 200);
+}
+
+function clearResults(type) {
+    document.getElementById('resultsArea').innerHTML = `
+        <div class="text-center py-4 text-muted">
+            <i class="fas fa-chart-bar fa-3x mb-3"></i>
+            <h6>Результаты появятся здесь после проверки</h6>
+        </div>`;
+    updateStats();
+}
+
+function deleteDeadProxies() {
+    // Implementation for deleting dead proxies
+    alert('Функция удаления мертвых прокси в разработке');
+}
+
+// Initialize
+updateStats();
+</script>
+{% endblock %}
