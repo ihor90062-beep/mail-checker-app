@@ -2,6 +2,8 @@
 
 This is an Advanced Email & Proxy Checker application built with Flask. The system provides a web-based interface for testing email accounts across multiple protocols (POP3, IMAP, SMTP) and validating proxy servers (HTTP/HTTPS, SOCKS4, SOCKS5). The application supports major email providers like Gmail, Yahoo, Hotmail/Outlook and features batch processing capabilities for testing multiple accounts simultaneously. It includes user authentication, a responsive Bootstrap interface, and real-time progress tracking for long-running validation operations.
 
+**Optimized for Replit free tier** with automatic PORT detection and 0.0.0.0 host binding for web accessibility.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -63,3 +65,12 @@ Preferred communication style: Simple, everyday language.
 - **HTTP/HTTPS Proxies**: Web proxy validation with connectivity testing
 - **SOCKS4/SOCKS5 Proxies**: Socket-based proxy server validation
 - **Connection Speed Testing**: Performance metrics for proxy server evaluation
+
+# Deployment Configuration
+
+## Replit Optimization
+- **Port Configuration**: Automatically detects PORT environment variable (fallback: 5000)
+- **Host Binding**: Configured for 0.0.0.0 to enable web access
+- **Simple Startup**: Run with `python main.py` or `python app.py`
+- **Free Tier Compatible**: No premium features or paid services required
+- **Environment Variables**: Uses SESSION_SECRET from environment (fallback: development key)
