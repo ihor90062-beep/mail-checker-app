@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Email Checker - Advanced Email & Proxy Checker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 fw-bold">
+        <i class="fas fa-envelope me-2"></i>Email Checker
+    </h1>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <!-- Check Form -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Test Email Account
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="emailCheckForm">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-at"></i>
+                            </span>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="user@example.com">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="protocol" class="form-label">Protocol</label>
+                        <select class="form-select" id="protocol" name="protocol">
+                            <option value="smtp">SMTP (Send Mail)</option>
+                            <option value="imap">IMAP (Receive Mail)</option>
+                            <option value="pop3">POP3 (Download Mail)</option>
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="checkBtn">
+                            <i class="fas fa-play me-2"></i>Check Email
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Provider Info -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-transparent">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Supported Providers
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    {% for provider in providers %}
+                    <div class="col-auto">
+                        <span class="badge bg-secondary">{{ provider }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <small class="text-muted d-block mt-2">
+                    Server configurations are automatically detected based on email domain
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Check Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="checkResults">
+                    <div class="text-center py-4">
+                        <i class="fas fa-envelope-open fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No checks performed yet</h6>
+                        <p class="text-muted">Enter email credentials and click "Check Email" to see results here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div id="progressContainer" class="mt-4" style="display: none;">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span>Checking email account...</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('togglePassword').addEventListener('click', function() {
+    const passwordField = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+});
+
+document.getElementById('emailCheckForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        email: formData.get('email'),
+        password: formData.get('password'),
+        protocol: formData.get('protocol')
+    };
+    
+    const checkBtn = document.getElementById('checkBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const resultsContainer = document.getElementById('checkResults');
+    
+    // Show progress
+    checkBtn.disabled = true;
+    checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Checking...';
+    progressContainer.style.display = 'block';
+    
+    try {
+        const response = await fetch('/api/check-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        progressContainer.style.display = 'none';
+        
+        // Show results
+        let statusClass = result.status === 'success' ? 'success' : 'danger';
+        let statusIcon = result.status === 'success' ? 'check-circle' : 'times-circle';
+        
+        resultsContainer.innerHTML = `
+            <div class="alert alert-${statusClass} border-0">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-${statusIcon} me-2"></i>
+                    <strong>${result.status.charAt(0).toUpperCase() + result.status.slice(1)}</strong>
+                </div>
+                <p class="mb-2">${result.message}</p>
+                ${result.provider ? `<small><strong>Provider:</strong> ${result.provider}</small><br>` : ''}
+                ${result.protocol ? `<small><strong>Protocol:</strong> ${result.protocol.toUpperCase()}</small>` : ''}
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>
+                    Checked at ${new Date().toLocaleString()}
+                </small>
+            </div>
+        `;
+        
+    } catch (error) {
+        progressContainer.style.display = 'none';
+        resultsContainer.innerHTML = `
+            <div class="alert alert-danger border-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error</strong>
+                </div>
+                <p class="mb-0">Failed to check email: ${error.message}</p>
+            </div>
+        `;
+    } finally {
+        checkBtn.disabled = false;
+        checkBtn.innerHTML = '<i class="fas fa-play me-2"></i>Check Email';
+    }
+});
+</script>
+{% endblock %}

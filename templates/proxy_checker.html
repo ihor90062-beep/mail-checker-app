@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Proxy Checker - Advanced Email & Proxy Checker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 fw-bold">
+        <i class="fas fa-network-wired me-2"></i>Proxy Checker
+    </h1>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <!-- Check Form -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-check-circle me-2"></i>Test Proxy Server
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="proxyCheckForm">
+                    <div class="mb-3">
+                        <label for="host" class="form-label">Proxy Host/IP</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-server"></i>
+                            </span>
+                            <input type="text" class="form-control" id="host" name="host" required placeholder="127.0.0.1 or proxy.example.com">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="port" class="form-label">Port</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-plug"></i>
+                            </span>
+                            <input type="number" class="form-control" id="port" name="port" required min="1" max="65535" placeholder="8080">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Proxy Type</label>
+                        <select class="form-select" id="type" name="type">
+                            <option value="http">HTTP</option>
+                            <option value="https">HTTPS</option>
+                            <option value="socks4">SOCKS4</option>
+                            <option value="socks5">SOCKS5</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username <span class="text-muted">(Optional)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="For authenticated proxies">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="proxyPassword" class="form-label">Password <span class="text-muted">(Optional)</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="proxyPassword" name="proxyPassword" placeholder="For authenticated proxies">
+                            <button class="btn btn-outline-secondary" type="button" id="toggleProxyPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success" id="checkProxyBtn">
+                            <i class="fas fa-play me-2"></i>Test Proxy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Proxy Types Info -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-transparent">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Supported Proxy Types
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-2">HTTP</span>
+                            <small class="text-muted">Web traffic</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2">HTTPS</span>
+                            <small class="text-muted">Secure web</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-info me-2">SOCKS4</span>
+                            <small class="text-muted">TCP connections</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-warning me-2">SOCKS5</span>
+                            <small class="text-muted">TCP + UDP + Auth</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Test Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="proxyResults">
+                    <div class="text-center py-4">
+                        <i class="fas fa-network-wired fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No tests performed yet</h6>
+                        <p class="text-muted">Enter proxy details and click "Test Proxy" to see results here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div id="proxyProgressContainer" class="mt-4" style="display: none;">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="spinner-border spinner-border-sm text-success me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span>Testing proxy connection...</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('toggleProxyPassword').addEventListener('click', function() {
+    const passwordField = document.getElementById('proxyPassword');
+    const icon = this.querySelector('i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+});
+
+document.getElementById('proxyCheckForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        host: formData.get('host'),
+        port: formData.get('port'),
+        type: formData.get('type'),
+        username: formData.get('username'),
+        password: formData.get('proxyPassword')
+    };
+    
+    const checkBtn = document.getElementById('checkProxyBtn');
+    const progressContainer = document.getElementById('proxyProgressContainer');
+    const resultsContainer = document.getElementById('proxyResults');
+    
+    // Show progress
+    checkBtn.disabled = true;
+    checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testing...';
+    progressContainer.style.display = 'block';
+    
+    try {
+        const response = await fetch('/api/check-proxy', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        // Hide progress
+        progressContainer.style.display = 'none';
+        
+        // Show results
+        let statusClass = result.status === 'success' ? 'success' : 'danger';
+        let statusIcon = result.status === 'success' ? 'check-circle' : 'times-circle';
+        
+        resultsContainer.innerHTML = `
+            <div class="alert alert-${statusClass} border-0">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-${statusIcon} me-2"></i>
+                    <strong>${result.status.charAt(0).toUpperCase() + result.status.slice(1)}</strong>
+                </div>
+                <p class="mb-2">${result.message}</p>
+                ${result.response_time ? `<small><strong>Response Time:</strong> ${result.response_time}</small><br>` : ''}
+                ${result.type ? `<small><strong>Type:</strong> ${result.type.toUpperCase()}</small>` : ''}
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>
+                    Tested at ${new Date().toLocaleString()}
+                </small>
+            </div>
+        `;
+        
+    } catch (error) {
+        progressContainer.style.display = 'none';
+        resultsContainer.innerHTML = `
+            <div class="alert alert-danger border-0">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Error</strong>
+                </div>
+                <p class="mb-0">Failed to test proxy: ${error.message}</p>
+            </div>
+        `;
+    } finally {
+        checkBtn.disabled = false;
+        checkBtn.innerHTML = '<i class="fas fa-play me-2"></i>Test Proxy';
+    }
+});
+</script>
+{% endblock %}

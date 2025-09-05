@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Hero Section -->
+        <div class="text-center mb-5">
+            <div class="display-1 text-primary mb-3">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1 class="display-4 fw-bold mb-3">Email & Proxy Checker</h1>
+            <p class="lead text-muted">
+                Professional tool for testing email accounts and proxy servers with advanced validation capabilities
+            </p>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-primary mb-3">
+                            <i class="fas fa-envelope fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Email Validation</h5>
+                        <p class="card-text text-muted">
+                            Test POP3, IMAP, and SMTP protocols for Gmail, Yahoo, Outlook and more
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-success mb-3">
+                            <i class="fas fa-network-wired fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Proxy Testing</h5>
+                        <p class="card-text text-muted">
+                            Validate HTTP, HTTPS, SOCKS4, and SOCKS5 proxy servers with speed testing
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-layer-group fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Batch Processing</h5>
+                        <p class="card-text text-muted">
+                            Process multiple accounts or proxies simultaneously with real-time progress
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-info mb-3">
+                            <i class="fas fa-chart-line fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Analytics</h5>
+                        <p class="card-text text-muted">
+                            Detailed statistics and success rates with comprehensive reporting
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="text-center">
+            {% if not session.username %}
+            <h3 class="mb-4">Get Started Today</h3>
+            <div class="d-grid gap-2 d-md-block">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-md-2">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
+            </div>
+            {% else %}
+            <h3 class="mb-4">Welcome back, {{ session.username }}!</h3>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Demo Notice -->
+<div class="row justify-content-center mt-5">
+    <div class="col-lg-8">
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Demo Version:</strong> This application uses simulated checking for demonstration purposes. 
+            No real email or proxy connections are made.
+        </div>
+    </div>
+</div>
+{% endblock %}

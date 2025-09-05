@@ -1,0 +1,246 @@
+/* Custom styles for Email & Proxy Checker */
+
+/* Global styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Button loading state */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Progress bar animations */
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+/* Form enhancements */
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Alert enhancements */
+.alert {
+    border-left: 4px solid transparent;
+}
+
+.alert-success {
+    border-left-color: var(--bs-success);
+}
+
+.alert-danger {
+    border-left-color: var(--bs-danger);
+}
+
+.alert-warning {
+    border-left-color: var(--bs-warning);
+}
+
+.alert-info {
+    border-left-color: var(--bs-info);
+}
+
+/* Statistics cards */
+.stats-card {
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-primary-dark));
+    color: white;
+    border: none;
+}
+
+/* Feature cards on homepage */
+.feature-card {
+    transition: all 0.3s ease;
+    border: 1px solid var(--bs-border-color);
+}
+
+.feature-card:hover {
+    border-color: var(--bs-primary);
+    background-color: var(--bs-primary-bg-subtle);
+}
+
+/* Badge styles */
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+/* Spinner customization */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Navigation enhancements */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--bs-primary) !important;
+}
+
+/* Footer styles */
+footer {
+    border-top: 1px solid var(--bs-border-color);
+    margin-top: auto;
+}
+
+/* Input group enhancements */
+.input-group-text {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-secondary-color);
+}
+
+/* Table enhancements */
+.table {
+    border-color: var(--bs-border-color);
+}
+
+.table th {
+    border-bottom: 2px solid var(--bs-border-color);
+    font-weight: 600;
+}
+
+/* Modal enhancements */
+.modal-content {
+    border: none;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--bs-border-color);
+}
+
+/* Dropdown enhancements */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+}
+
+.dropdown-item {
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary);
+}
+
+/* Loading animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+    .display-1 {
+        font-size: 3rem;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Dark mode specific enhancements */
+[data-bs-theme="dark"] {
+    --bs-border-color: #495057;
+    --bs-secondary-bg: #343a40;
+    --bs-secondary-color: #adb5bd;
+    --bs-primary-bg-subtle: rgba(13, 110, 253, 0.1);
+}
+
+[data-bs-theme="dark"] .card {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .form-control {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-border-color);
+    color: var(--bs-light);
+}
+
+[data-bs-theme="dark"] .form-control:focus {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-primary);
+    color: var(--bs-light);
+}
+
+/* Custom utility classes */
+.text-gradient {
+    background: linear-gradient(45deg, var(--bs-primary), var(--bs-info));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-soft {
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.border-soft {
+    border: 1px solid rgba(var(--bs-border-color-rgb), 0.5) !important;
+}
+
+/* Success/Error state colors */
+.text-success-custom {
+    color: #198754 !important;
+}
+
+.text-danger-custom {
+    color: #dc3545 !important;
+}
+
+.bg-success-custom {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-danger-custom {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
